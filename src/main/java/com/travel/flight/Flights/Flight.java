@@ -1,10 +1,14 @@
 package com.travel.flight.Flights;
 
+import com.travel.flight.Users.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Flight {
@@ -15,16 +19,22 @@ public class Flight {
   private String airline;
   private int time; // minutes
   private double price;
+  // FlightInfo, format of ("departs from;time;departs from;time...")
   @Column(columnDefinition = "JSON")
   private String location;
   private String link;
   private String flightStart;
   private String flightDestination;
-  
+  // the leaving date in this format ("month;day;hour;minute")
+  private String leaveTime;
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User user;
+
   public Flight() {}
 
   public Flight(long id, String airline, int time, double price, String location, String link, 
-      String flightStart, String flightDestination) {
+      String flightStart, String flightDestination, String leaveTime) {
     this.id = id;
     this.airline = airline;
     this.time = time;
@@ -33,6 +43,7 @@ public class Flight {
     this.link = link;
     this.flightStart = flightStart;
     this.flightDestination = flightDestination;
+    this.leaveTime = leaveTime;
   }
   
   public long getId() {
@@ -83,11 +94,23 @@ public class Flight {
   public void setFlightDestination(String flightDestination) {
     this.flightDestination = flightDestination;
   }
+  public String getLeaveTime() {
+    return leaveTime;
+  }
+  public void setLeaveTime(String leaveTime) {
+    this.leaveTime = leaveTime;
+  }
+  public User getUser() {
+    return user;
+  }
+  public void setUser(User user) {
+    this.user = user;
+  }
   
   @Override
   public String toString() {
     return "Flight [id=" + id + ", airline=" + airline + ", time=" + time + ", price=" + price + ", location=" + location
         + ", link=" + link + ", flightStart=" + flightStart + ", flightDestination="
-        + flightDestination + "]";
+        + flightDestination + ", leaveTime=" + leaveTime + "]";
   }
 }
