@@ -1,6 +1,6 @@
 package com.travel.flight.Flights;
 
-import com.travel.flight.Users.User;
+import com.travel.flight.Users.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +29,7 @@ public class Flight {
   private String leaveTime;
   @ManyToOne
   @JoinColumn(name = "user_id")
-  private User user;
+  private UserEntity user;
 
   public Flight() {}
 
@@ -100,10 +100,10 @@ public class Flight {
   public void setLeaveTime(String leaveTime) {
     this.leaveTime = leaveTime;
   }
-  public User getUser() {
+  public UserEntity getUser() {
     return user;
   }
-  public void setUser(User user) {
+  public void setUser(UserEntity user) {
     this.user = user;
   }
   
