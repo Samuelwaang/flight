@@ -3,7 +3,7 @@ package com.travel.flight.Security;
 import lombok.Data;
 
 @Data
-public class LoginDto {
+public class LoginEntity {
     private String email;
     private String password;
 }

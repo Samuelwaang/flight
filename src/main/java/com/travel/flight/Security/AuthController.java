@@ -2,15 +2,21 @@ package com.travel.flight.Security;
 
 import java.util.Collections;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +38,7 @@ public class AuthController {
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
     private JwtProvider jwtProvider;
+    private CustomUserDetailsService customUserDetailsService;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
             RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider) {
@@ -43,13 +50,25 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginEntity loginDto, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtProvider.generateToken(authentication);
-        Cookie jwtToken = new Cookie("jwt", token);
-        response.addCookie(jwtToken);
+        // Cookie cookie = new Cookie("jwt", token);
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
+                .httpOnly(false)
+                .secure(true)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("None; Secure")
+                .build();
+        // cookie.setHttpOnly(true);
+        // cookie.setMaxAge(7 * 24 * 60 * 60);
+        // cookie.setPath("/");
+        // cookie.setSecure(true); set true for deployment
+        
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         
         return new ResponseEntity<>(new AuthResponseDto(token), HttpStatus.OK);
     }
@@ -69,6 +88,18 @@ public class AuthController {
         userRepository.save(user);
 
         return new ResponseEntity<>("w register", HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<String> checkAuthorization(@RequestHeader("jwt") String token) {
+        boolean valid = false;
+        if(!token.isEmpty() && (token.startsWith("Bearer "))) {
+            valid = jwtProvider.validateToken(token);
+        }
+        if(valid) {
+            return new ResponseEntity<>("authorized", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("not authorized", HttpStatus.UNAUTHORIZED);
     }
 
 
