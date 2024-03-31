@@ -20,7 +20,7 @@ public class JwtProvider {
     public String generateToken(Authentication authentication) {
         String email = authentication.getName();
         Date currentDate = new Date();
-        Date expiryDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
+        Date expiryDate = new Date(currentDate.getTime() + 60*60*1000);
 
         String token = Jwts.builder()
                 .setSubject(email)
@@ -28,6 +28,7 @@ public class JwtProvider {
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+        System.out.println("generated token: " + token);
         return token;
     }
 

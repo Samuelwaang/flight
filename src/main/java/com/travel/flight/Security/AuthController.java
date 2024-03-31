@@ -50,27 +50,20 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginEntity loginDto, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginEntity loginDto, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtProvider.generateToken(authentication);
-        // Cookie cookie = new Cookie("jwt", token);
         ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
-                .httpOnly(false)
-                .secure(true)
+                .httpOnly(true) // make true for deployment
+                .secure(false) // make true for deployment
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("None; Secure")
+                .sameSite("None; Secure") // "None; Secure" for deployment
                 .build();
-        // cookie.setHttpOnly(true);
-        // cookie.setMaxAge(7 * 24 * 60 * 60);
-        // cookie.setPath("/");
-        // cookie.setSecure(true); set true for deployment
         
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
-        
-        return new ResponseEntity<>(new AuthResponseDto(token), HttpStatus.OK);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString()).build();
     }
 
     @PostMapping("/register")
@@ -90,7 +83,7 @@ public class AuthController {
         return new ResponseEntity<>("w register", HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/check-auth")
     public ResponseEntity<String> checkAuthorization(@RequestHeader("jwt") String token) {
         boolean valid = false;
         if(!token.isEmpty() && (token.startsWith("Bearer "))) {
