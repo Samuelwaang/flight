@@ -25,6 +25,7 @@ import com.travel.flight.Users.RoleRepository;
 import com.travel.flight.Users.UserRepository;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.travel.flight.Users.UserEntity;
@@ -59,7 +60,7 @@ public class AuthController {
                 .httpOnly(true) // make true for deployment
                 .secure(false) // make true for deployment
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
+                .maxAge(60*60)
                 .sameSite("None; Secure") // "None; Secure" for deployment
                 .build();
         
@@ -84,13 +85,19 @@ public class AuthController {
     }
 
     @GetMapping("/check-auth")
-    public ResponseEntity<String> checkAuthorization(@RequestHeader("jwt") String token) {
-        boolean valid = false;
-        if(!token.isEmpty() && (token.startsWith("Bearer "))) {
-            valid = jwtProvider.validateToken(token);
-        }
-        if(valid) {
-            return new ResponseEntity<>("authorized", HttpStatus.OK);
+    public ResponseEntity<String> checkAuthorization(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    System.out.println("check-auth token: " + token);
+                    boolean valid = jwtProvider.validateToken(token);
+                    if (valid) {
+                        return new ResponseEntity<>("authorized", HttpStatus.OK);
+                    }
+                }
+            }
         }
         return new ResponseEntity<>("not authorized", HttpStatus.UNAUTHORIZED);
     }

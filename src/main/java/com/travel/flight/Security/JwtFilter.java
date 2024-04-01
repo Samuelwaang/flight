@@ -28,17 +28,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        // String token = getJwtFromRequest(request);
-        // if(StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
-        //     String username = tokenProvider.getEmailFromJWT(token);
-        //     UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-        //     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails,
-        //             userDetails.getAuthorities());
-        //     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        //     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        // }
-        // filterChain.doFilter(request, response);
-
         String token = null;
         String username = null;
 
@@ -49,7 +38,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
         }
-        System.out.println("token: " + token);
 
         if(token == null){
             filterChain.doFilter(request, response);
@@ -70,12 +58,4 @@ public class JwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer: ")) {
-            return bearerToken.substring(7, bearerToken.length());
-        }
-        return null;
-    }
-    
 }
