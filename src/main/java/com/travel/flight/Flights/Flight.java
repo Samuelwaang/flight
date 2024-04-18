@@ -11,7 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
+
 
 @Entity
 public class Flight {
@@ -30,7 +31,7 @@ public class Flight {
   private String flightDestination;
   // the leaving date in this format ("month;day;hour;minute")
   private String leaveTime;
-  @ManyToOne
+  @ManyToMany
   @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "user_id"), 
       inverseJoinColumns = @JoinColumn(name = "flight_id"))
   private Set<UserEntity> users;

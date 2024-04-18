@@ -22,6 +22,7 @@ import com.travel.flight.Users.UserRepository;
 public class FlightController {
   @Autowired // injects this bean (in this case FlightRepository)
   private FlightRepository flightRepository;
+  @Autowired
   private UserRepository userRepository;
   
   @PostMapping(path = "/post")
@@ -67,7 +68,7 @@ public class FlightController {
   }
 
   @PostMapping("/addFlightToUser/{flightId}/{userId}")
-  public String addFlightToUser(@PathVariable(name = "flightId") long flightId, @PathVariable(name = "userId") long userId) {
+  public @ResponseBody String addFlightToUser(@PathVariable(name = "flightId") long flightId, @PathVariable(name = "userId") long userId) {
     Optional<UserEntity> possibleUser = userRepository.findById(userId);    
     UserEntity user = possibleUser.get();
     Optional<Flight> possibleFlight = flightRepository.findById(flightId);    
@@ -83,4 +84,4 @@ public class FlightController {
   }
 
 
-}
+} 

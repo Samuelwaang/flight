@@ -49,12 +49,12 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles = new ArrayList<>();
 
-    @ManyToOne
+    @ManyToMany
     @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "flight_id"), 
         inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<Flight> flights;
 
-    
+
     public Set<Flight> getFlights() {
         return flights;
     }
