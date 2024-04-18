@@ -1,5 +1,9 @@
 package com.travel.flight.Flights;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,11 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.travel.flight.Users.UserEntity;
+import com.travel.flight.Users.UserRepository;
+
 @Controller
 @RequestMapping("/flight")
 public class FlightController {
   @Autowired // injects this bean (in this case FlightRepository)
-  private FlightRepository repository;
+  private FlightRepository flightRepository;
+  private UserRepository userRepository;
   
   @PostMapping(path = "/post")
   public @ResponseBody String addNewFlight(@RequestParam String airline, @RequestParam int time, 
@@ -31,7 +39,7 @@ public class FlightController {
       f.setFlightDestination(flightDestination);
       f.setLeaveTime(leaveTime);
 
-      repository.save(f);
+      flightRepository.save(f);
     }
     catch(IllegalArgumentException e) {
       return "incorrect input types";
@@ -45,7 +53,7 @@ public class FlightController {
   @DeleteMapping(path = "/delete/{id}")
   public void deleteById(@PathVariable("id") long id) {
     try{
-      repository.deleteById(id);  
+      flightRepository.deleteById(id);  
     }
     catch(Exception e) {
       System.out.println("error");
@@ -55,6 +63,24 @@ public class FlightController {
   
   @GetMapping(path = "/all")
   public @ResponseBody Iterable<Flight> getAllUsers() {
-    return repository.findAll();
+    return flightRepository.findAll();
   }
+
+  @PostMapping("/addFlightToUser/{flightId}/{userId}")
+  public String addFlightToUser(@PathVariable(name = "flightId") long flightId, @PathVariable(name = "userId") long userId) {
+    Optional<UserEntity> possibleUser = userRepository.findById(userId);    
+    UserEntity user = possibleUser.get();
+    Optional<Flight> possibleFlight = flightRepository.findById(flightId);    
+    Flight flight = possibleFlight.get();
+
+    Set<Flight> flights = new HashSet<>();
+    flights.add(flight);
+    
+    user.setFlights(flights);
+    userRepository.save(user);
+
+    return "flight saved";
+  }
+
+
 }

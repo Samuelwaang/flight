@@ -1,5 +1,7 @@
 package com.travel.flight.Flights;
 
+import java.util.Set;
+
 import com.travel.flight.Users.UserEntity;
 
 import jakarta.persistence.Column;
@@ -8,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -28,8 +31,9 @@ public class Flight {
   // the leaving date in this format ("month;day;hour;minute")
   private String leaveTime;
   @ManyToOne
-  @JoinColumn(name = "user_id")
-  private UserEntity user;
+  @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "user_id"), 
+      inverseJoinColumns = @JoinColumn(name = "flight_id"))
+  private Set<UserEntity> users;
 
   public Flight() {}
 
@@ -100,11 +104,11 @@ public class Flight {
   public void setLeaveTime(String leaveTime) {
     this.leaveTime = leaveTime;
   }
-  public UserEntity getUser() {
-    return user;
+  public Set<UserEntity> getUser() {
+    return users;
   }
-  public void setUser(UserEntity user) {
-    this.user = user;
+  public void setUser(Set<UserEntity> users) {
+    this.users = users;
   }
   
   @Override
