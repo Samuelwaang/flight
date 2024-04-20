@@ -32,8 +32,8 @@ public class Flight {
   // the leaving date in this format ("month;day;hour;minute")
   private String leaveTime;
   @ManyToMany
-  @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "user_id"), 
-      inverseJoinColumns = @JoinColumn(name = "flight_id"))
+  @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "flight_id"), 
+      inverseJoinColumns = @JoinColumn(name = "user_id"))
   private Set<UserEntity> users;
 
   public Flight() {}

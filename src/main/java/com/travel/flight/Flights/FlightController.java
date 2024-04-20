@@ -1,6 +1,7 @@
 package com.travel.flight.Flights;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -83,5 +85,18 @@ public class FlightController {
     return "flight saved";
   }
 
+  @GetMapping(path = "flightsByUser")
+  public @ResponseBody String getAllFlightsByUser(@RequestBody Map<String, String> requestBody) {
+    String userId = requestBody.get("userId");
+    long userId1 = Long.parseLong(userId);
+    Optional<UserEntity> possibleUser = userRepository.findById(userId1); 
+    UserEntity user = possibleUser.get();
+    
+    Set<Flight> flights = user.getFlights();
+    
+    System.out.println(user.getFlights());
+
+    return flights.toString();
+  }
 
 } 

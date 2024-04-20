@@ -50,8 +50,8 @@ public class UserEntity {
     private List<Role> roles = new ArrayList<>();
 
     @ManyToMany
-    @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "flight_id"), 
-        inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "user_id"), 
+        inverseJoinColumns = @JoinColumn(name = "flight_id"))
     private Set<Flight> flights;
 
 
