@@ -1,6 +1,8 @@
 package com.travel.flight.Security;
 
 import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.travel.flight.Flights.Flight;
 import com.travel.flight.Users.Role;
 import com.travel.flight.Users.RoleRepository;
 import com.travel.flight.Users.UserRepository;
@@ -102,5 +105,23 @@ public class AuthController {
         return new ResponseEntity<>("not authorized", HttpStatus.UNAUTHORIZED);
     }
 
-
+    @GetMapping("/get-flights")
+    public String getFlightsFromJwt(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    String email = jwtProvider.getEmailFromJWT(token);
+                    Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
+                    UserEntity user = optionalUser.get();
+                    Set<Flight> userFlights = user.getFlights();
+                    if(jwtProvider.validateToken(token)) {
+                        return userFlights.toString();
+                    }
+                }
+            }
+        }
+        return null;
+    }    
 }

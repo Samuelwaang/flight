@@ -6,11 +6,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,7 +58,7 @@ public class FlightController {
 
   @DeleteMapping(path = "/delete/{id}")
   public void deleteById(@PathVariable("id") long id) {
-    try{
+    try {
       flightRepository.deleteById(id);  
     }
     catch(Exception e) {
@@ -98,5 +101,31 @@ public class FlightController {
 
     return flights.toString();
   }
+
+    @PostMapping("/{id}")
+    public @ResponseBody ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flightDetails) throws Exception {
+      Optional<Flight> optionalFlight = flightRepository.findById(id);
+      if(optionalFlight.isPresent()) {
+        Flight existingFlight = optionalFlight.get();
+
+        existingFlight.setAirline(flightDetails.getAirline());
+        existingFlight.setTime(flightDetails.getTime());
+        existingFlight.setPrice(flightDetails.getPrice());
+        existingFlight.setLocation(flightDetails.getLocation());
+        existingFlight.setLink(flightDetails.getLink());
+        existingFlight.setFlightStart(flightDetails.getFlightStart());
+        existingFlight.setFlightDestination(flightDetails.getFlightDestination());
+        existingFlight.setLeaveTime(flightDetails.getLeaveTime());
+        flightRepository.save(existingFlight);
+
+        return ResponseEntity.ok(existingFlight);
+      }
+
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+
+
+
 
 } 

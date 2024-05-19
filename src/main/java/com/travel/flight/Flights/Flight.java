@@ -21,7 +21,7 @@ public class Flight {
   @GeneratedValue(strategy=GenerationType.AUTO)
   private long id;
   private String airline;
-  private int time; // minutes
+  private int time; // duration in minutes
   private double price;
   // FlightInfo, format of ("departs from;time;departs from;time...")
   @Column(columnDefinition = "JSON")
