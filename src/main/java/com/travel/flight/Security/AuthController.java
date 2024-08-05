@@ -32,6 +32,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.travel.flight.Users.UserEntity;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -112,11 +115,17 @@ public class AuthController {
             for (Cookie cookie : cookies) {
                 if ("jwt".equals(cookie.getName())) {
                     String token = cookie.getValue();
+                    System.out.println(token);
                     String email = jwtProvider.getEmailFromJWT(token);
+                    System.out.println(email);
                     Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
                     UserEntity user = optionalUser.get();
+                    System.out.println(user.getId());
                     Set<Flight> userFlights = user.getFlights();
+                    System.out.println(userFlights);
+                    System.out.println(userFlights.size());
                     if(jwtProvider.validateToken(token)) {
+                        System.out.println("validated");
                         return userFlights.toString();
                     }
                 }
@@ -124,4 +133,9 @@ public class AuthController {
         }
         return null;
     }    
+    @GetMapping("/all")
+    public @ResponseBody Iterable<UserEntity> getAllUsers() {
+        return userRepository.findAll();
+    }
+    
 }

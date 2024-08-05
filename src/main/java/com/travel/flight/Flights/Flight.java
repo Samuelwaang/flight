@@ -1,121 +1,89 @@
 package com.travel.flight.Flights;
 
+import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.travel.flight.Users.UserEntity;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-
+@Data
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Flight {
   
-  @Id
-  @GeneratedValue(strategy=GenerationType.AUTO)
-  private long id;
-  private String airline;
-  private int time; // duration in minutes
-  private double price;
-  // FlightInfo, format of ("departs from;time;departs from;time...")
-  @Column(columnDefinition = "JSON")
-  private String location;
-  private String link;
-  private String flightStart;
-  private String flightDestination;
-  // the leaving date in this format ("month;day;hour;minute")
-  private String leaveTime;
-  @ManyToMany
-  @JoinTable(name = "USER_FLIGHT_MAPPING", joinColumns = @JoinColumn(name = "flight_id"), 
-      inverseJoinColumns = @JoinColumn(name = "user_id"))
-  private Set<UserEntity> users;
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    @EqualsAndHashCode.Include
+    private long id;
+    private String airline;
+    private int time;
+    private double price;
+    @Column(length = 1024)
+    private String link;
+    private String flightStart;
+    private String flightDestination;
+    private String leaveTime;
+    private String arrivalTime;
+    private String leaveDate;
+    private String returnDay;
 
-  public Flight() {}
+    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Stop> stops;
+    private int numStops;
 
-  public Flight(long id, String airline, int time, double price, String location, String link, 
-      String flightStart, String flightDestination, String leaveTime) {
-    this.id = id;
-    this.airline = airline;
-    this.time = time;
-    this.price = price;
-    this.location = location;
-    this.link = link;
-    this.flightStart = flightStart;
-    this.flightDestination = flightDestination;
-    this.leaveTime = leaveTime;
-  }
-  
-  public long getId() {
-    return id;
-  }
-  public void setId(long id) {
-    this.id = id;
-  }
-  public String getAirline() {
-    return airline;
-  }
-  public void setAirline(String airline) {
-    this.airline = airline;
-  }
-  public int getTime() {
-    return time;
-  }
-  public void setTime(int time) {
-    this.time = time;
-  }
-  public double getPrice() {
-    return price;
-  }
-  public void setPrice(double price) {
-    this.price = price;
-  }
-  public String getLocation() {
-    return location;
-  }
-  public void setLocation(String location) {
-    this.location = location;
-  }
-  public String getLink() {
-    return link;
-  }
-  public void setLink(String link) {
-    this.link = link;
-  }
-  public String getFlightStart() {
-    return flightStart;
-  }
-  public void setFlightStart(String flightStart) {
-    this.flightStart = flightStart;
-  }
-  public String getFlightDestination() {
-    return flightDestination;
-  }
-  public void setFlightDestination(String flightDestination) {
-    this.flightDestination = flightDestination;
-  }
-  public String getLeaveTime() {
-    return leaveTime;
-  }
-  public void setLeaveTime(String leaveTime) {
-    this.leaveTime = leaveTime;
-  }
-  public Set<UserEntity> getUser() {
-    return users;
-  }
-  public void setUser(Set<UserEntity> users) {
-    this.users = users;
-  }
-  
-  @Override
-  public String toString() {
-    return "Flight [id=" + id + ", airline=" + airline + ", time=" + time + ", price=" + price + ", location=" + location
-        + ", link=" + link + ", flightStart=" + flightStart + ", flightDestination="
-        + flightDestination + ", leaveTime=" + leaveTime + "]";
-  }
+    @ManyToMany(mappedBy = "flights", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<UserEntity> users = new HashSet<>();
+
+    // Getters and setters for users
+    public Set<UserEntity> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<UserEntity> users) {
+        this.users = users;
+    }
+
+    // @Override
+    // public String toString() {
+
+    //     ReturnedFlight returnedFlight = new ReturnedFlight(id, airline, time, price, link, flightStart, flightDestination, leaveTime, arrivalTime, 
+    //     leaveDate, returnDay, stops, numStops);
+    //     return returnedFlight.toString();
+    //     // return "Flight{" +
+    //     //         "id=" + id +
+    //     //         ", airline='" + airline + '\'' +
+    //     //         ", time=" + time +
+    //     //         ", price=" + price +
+    //     //         ", link='" + link + '\'' +
+    //     //         ", flightStart='" + flightStart + '\'' +
+    //     //         ", flightDestination='" + flightDestination + '\'' +
+    //     //         ", leaveTime='" + leaveTime + '\'' +
+    //     //         ", arrivalTime='" + arrivalTime + '\'' +
+    //     //         ", leaveDate='" + leaveDate + '\'' +
+    //     //         ", returnDay='" + returnDay + '\'' +
+    //     //         ", stops='" + stops + '\'' +
+    //     //         ", numStops=" + numStops +
+    //     //         // Avoid printing users to prevent recursion
+    //     //         '}';
+    // }
 }

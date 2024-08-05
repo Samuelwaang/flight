@@ -1,6 +1,9 @@
 package com.travel.flight.Flights;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -13,7 +16,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,25 +27,45 @@ import com.travel.flight.Users.UserRepository;
 @Controller
 @RequestMapping("/flight")
 public class FlightController {
-  @Autowired // injects this bean (in this case FlightRepository)
+
+  @Autowired
   private FlightRepository flightRepository;
   @Autowired
   private UserRepository userRepository;
+  @Autowired
+  private FlightDataReceiverService flightDataReceiverService;
+  @Autowired
+  private FlightSaveService flightSaveService;
+
   
   @PostMapping(path = "/post")
   public @ResponseBody String addNewFlight(@RequestParam String airline, @RequestParam int time, 
-      @RequestParam double price, @RequestParam String location, @RequestParam String link, 
-      @RequestParam String flightStart, @RequestParam String flightDestination, @RequestParam String leaveTime) {
+      @RequestParam double price, @RequestParam String link, 
+      @RequestParam String flightStart, @RequestParam String flightDestination, @RequestParam String leaveTime, @RequestParam String arrivalTime, @RequestParam String leaveDate, @RequestParam String returnDay, @RequestParam String stops, @RequestParam int numStops) {
     try {
+      String[] stopsArray = stops.split(";");
+      List<Stop> stopList = new ArrayList<>();
+      for(String eachStop : stopsArray) {
+        String[] stopData = eachStop.split("-");
+        Stop stop = new Stop();
+        stop.setLocation(stopData[0]);
+        stop.setTime(Integer.parseInt(stopData[1]));
+        stopList.add(stop);
+    }
+
       Flight f = new Flight();
       f.setAirline(airline);
       f.setTime(time);
       f.setPrice(price);
-      f.setLocation(location);
       f.setLink(link);
       f.setFlightStart(flightStart);
       f.setFlightDestination(flightDestination);
       f.setLeaveTime(leaveTime);
+      f.setArrivalTime(arrivalTime);
+      f.setLeaveDate(leaveDate);
+      f.setReturnDay(returnDay);
+      f.setStops(stopList);
+      f.setNumStops(numStops);
 
       flightRepository.save(f);
     }
@@ -51,6 +73,7 @@ public class FlightController {
       return "incorrect input types";
     }
     catch(Exception e) {
+      e.printStackTrace();
       return "unknown error";
     }
     return "saved";
@@ -69,21 +92,36 @@ public class FlightController {
   
   @GetMapping(path = "/all")
   public @ResponseBody Iterable<Flight> getAllUsers() {
-    return flightRepository.findAll();
+    try {
+      return flightRepository.findAll();
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+    
   }
 
   @PostMapping("/addFlightToUser/{flightId}/{userId}")
   public @ResponseBody String addFlightToUser(@PathVariable(name = "flightId") long flightId, @PathVariable(name = "userId") long userId) {
     Optional<UserEntity> possibleUser = userRepository.findById(userId);    
     UserEntity user = possibleUser.get();
-    Optional<Flight> possibleFlight = flightRepository.findById(flightId);    
+    System.out.println(user.getEmail());
+    Optional<Flight> possibleFlight = flightRepository.findById(flightId);   
     Flight flight = possibleFlight.get();
+    System.out.println(flight.getAirline()); 
 
-    Set<Flight> flights = new HashSet<>();
+    // update flight list for user
+    Set<Flight> flights = user.getFlights();
     flights.add(flight);
-    
     user.setFlights(flights);
     userRepository.save(user);
+
+    // update user list for flight
+    Set<UserEntity> users = flight.getUsers();
+    users.add(user);
+    flight.setUsers(users);
+    flightRepository.save(flight);
 
     return "flight saved";
   }
@@ -102,30 +140,39 @@ public class FlightController {
     return flights.toString();
   }
 
-    @PostMapping("/{id}")
-    public @ResponseBody ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flightDetails) throws Exception {
-      Optional<Flight> optionalFlight = flightRepository.findById(id);
-      if(optionalFlight.isPresent()) {
-        Flight existingFlight = optionalFlight.get();
+  @PostMapping("/{id}")
+  public @ResponseBody ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flightDetails) throws Exception {
+    Optional<Flight> optionalFlight = flightRepository.findById(id);
+    if(optionalFlight.isPresent()) {
+      Flight existingFlight = optionalFlight.get();
 
-        existingFlight.setAirline(flightDetails.getAirline());
-        existingFlight.setTime(flightDetails.getTime());
-        existingFlight.setPrice(flightDetails.getPrice());
-        existingFlight.setLocation(flightDetails.getLocation());
-        existingFlight.setLink(flightDetails.getLink());
-        existingFlight.setFlightStart(flightDetails.getFlightStart());
-        existingFlight.setFlightDestination(flightDetails.getFlightDestination());
-        existingFlight.setLeaveTime(flightDetails.getLeaveTime());
-        flightRepository.save(existingFlight);
+      existingFlight.setAirline(flightDetails.getAirline());
+      existingFlight.setTime(flightDetails.getTime());
+      existingFlight.setPrice(flightDetails.getPrice());
+      existingFlight.setLink(flightDetails.getLink());
+      existingFlight.setFlightStart(flightDetails.getFlightStart());
+      existingFlight.setFlightDestination(flightDetails.getFlightDestination());
+      existingFlight.setLeaveTime(flightDetails.getLeaveTime());
+      flightRepository.save(existingFlight);
 
-        return ResponseEntity.ok(existingFlight);
-      }
-
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return ResponseEntity.ok(existingFlight);
     }
 
+    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+  }
 
+  @PostMapping("/call")
+  public @ResponseBody ResponseEntity<List<Flight>> callApiAndSave(@RequestBody String jsonBody) throws IOException {
+    String apiUrl = "http://3.141.31.252/data/get"; // Replace with actual API URL
+    List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
+    List<Flight> savedFlights = flightSaveService.saveFlights(flights);
 
+    for (Flight flight : flights) {
+      for (Stop stop : flight.getStops()) {
+          stop.setFlight(flight);
+      }
+  }
 
-
+    return ResponseEntity.ok(savedFlights);
+  }
 } 
