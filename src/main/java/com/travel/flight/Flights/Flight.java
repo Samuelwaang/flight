@@ -44,6 +44,7 @@ public class Flight {
     private String arrivalTime;
     private String leaveDate;
     private String returnDay;
+    private String flightImpactLink;
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

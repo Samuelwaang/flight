@@ -2,6 +2,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "FlightInitRunner",
+            "request": "launch",
+            "mainClass": "com.travel.flight.FlightInitRunner",
+            "projectName": "flight"
+        },
+        {
+            "type": "java",
+            "name": "FlightInit",
+            "request": "launch",
+            "mainClass": "com.travel.flight.Flights.FlightInit",
+            "projectName": "flight"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-FlightApplication<flight>",
             "request": "launch",
             "cwd": "${workspaceFolder}",

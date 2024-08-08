@@ -41,7 +41,8 @@ public class FlightController {
   @PostMapping(path = "/post")
   public @ResponseBody String addNewFlight(@RequestParam String airline, @RequestParam int time, 
       @RequestParam double price, @RequestParam String link, 
-      @RequestParam String flightStart, @RequestParam String flightDestination, @RequestParam String leaveTime, @RequestParam String arrivalTime, @RequestParam String leaveDate, @RequestParam String returnDay, @RequestParam String stops, @RequestParam int numStops) {
+      @RequestParam String flightStart, @RequestParam String flightDestination, @RequestParam String leaveTime, @RequestParam String arrivalTime, @RequestParam String leaveDate, 
+          @RequestParam String returnDay, @RequestParam String stops, @RequestParam int numStops, @RequestParam String flightImpactLink) {
     try {
       String[] stopsArray = stops.split(";");
       List<Stop> stopList = new ArrayList<>();
@@ -66,6 +67,7 @@ public class FlightController {
       f.setReturnDay(returnDay);
       f.setStops(stopList);
       f.setNumStops(numStops);
+      f.setFlightImpactLink(flightImpactLink);
 
       flightRepository.save(f);
     }
@@ -163,7 +165,7 @@ public class FlightController {
 
   @PostMapping("/call")
   public @ResponseBody ResponseEntity<List<Flight>> callApiAndSave(@RequestBody String jsonBody) throws IOException {
-    String apiUrl = "http://3.141.31.252/data/get"; // Replace with actual API URL
+    String apiUrl = "http://3.141.31.252/data/get";
     List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
     List<Flight> savedFlights = flightSaveService.saveFlights(flights);
 
@@ -171,7 +173,7 @@ public class FlightController {
       for (Stop stop : flight.getStops()) {
           stop.setFlight(flight);
       }
-  }
+    }
 
     return ResponseEntity.ok(savedFlights);
   }
