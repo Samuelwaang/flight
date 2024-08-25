@@ -47,7 +47,7 @@ public class Flight {
     private String flightImpactLink;
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference(value = "flightStops")
     private List<Stop> stops;
     private int numStops;
 
@@ -56,7 +56,7 @@ public class Flight {
     private String returnLeaveTime;
     private String returnArrivalTime;
     @OneToMany(mappedBy = "returnFlight", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference(value = "returnFlightStops")
     private List<Stop> returnStops;
     private int returnNumStops;
     private int returnTime;

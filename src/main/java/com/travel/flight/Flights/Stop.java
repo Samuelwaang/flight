@@ -28,11 +28,11 @@ public class Stop {
     
     @ManyToOne
     @JoinColumn(name = "flight_id")
-    @JsonBackReference
+    @JsonBackReference(value = "flightStops")
     private Flight flight;
 
     @ManyToOne
     @JoinColumn(name = "return_flight_id")
-    @JsonBackReference
+    @JsonBackReference(value = "returnFlightStops")
     private Flight returnFlight;
 }

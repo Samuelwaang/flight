@@ -62,10 +62,10 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "flight_id"))
     private Set<Flight> flights = new HashSet<>();
 
-    // @ElementCollection
-    // @MapKeyJoinColumn(name = "flight_id")
-    // @Column(name = "desired_price")
-    // private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
+    @ElementCollection
+    @MapKeyJoinColumn(name = "flight_id")
+    @Column(name = "desired_price")
+    private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
 
     public Set<Flight> getFlights() {
         return flights;

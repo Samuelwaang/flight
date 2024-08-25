@@ -26,13 +26,18 @@ public class FlightUpdateService {
     public List<Flight> getAllFlights() {
         String url = "http://localhost:8081/flight/all";
 
-        Mono<List<Flight>> flightsMono = webClientBuilder.build()
-                .get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
-
-        return flightsMono.block();
+        try {
+            Mono<List<Flight>> flightsMono = webClientBuilder.build()
+                    .get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
+                    System.out.println(flightsMono.block());
+            return flightsMono.block();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to retrieve flights", e);
+        }
     }
 
     public List<List<Flight>> groupFlights(List<Flight> flights) {
