@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.travel.flight.Users.UserEntity;
 import com.travel.flight.Users.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Controller
 @RequestMapping("/flight")
 public class FlightController {
@@ -165,7 +167,7 @@ public class FlightController {
 
   @PostMapping("/call")
   public @ResponseBody ResponseEntity<List<Flight>> callApiAndSave(@RequestBody String jsonBody) throws IOException {
-    String apiUrl = "http://3.141.31.252/data/get";
+    String apiUrl = "http://localhost:8082/data/get";
     List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
     List<Flight> savedFlights = flightSaveService.saveFlights(flights);
 
@@ -176,5 +178,21 @@ public class FlightController {
     }
 
     return ResponseEntity.ok(savedFlights);
+  }
+
+  @Transactional
+  @DeleteMapping("/deleteAll")
+  public ResponseEntity<String> deleteAllFlights() {
+      try {
+          // Step 1: Clear all associations between users and flights in the join table
+          userRepository.clearFlightAssociations();
+
+          // Step 2: Delete all flights
+          flightRepository.deleteAll();
+
+          return ResponseEntity.ok("All flights and associations deleted successfully.");
+      } catch (Exception e) {
+          return ResponseEntity.status(500).body("An error occurred while deleting flights: " + e.getMessage());
+      }
   }
 } 

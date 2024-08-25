@@ -10,9 +10,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +58,7 @@ public class FlightInitController {
     }
 
     private void saveFlight(String jsonBody) throws IOException {
-        String apiUrl = "http://3.141.31.252/data/get";
+        String apiUrl = "http://localhost:8082/data/get";
         List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
         flightSaveService.saveFlights(flights);
 
@@ -72,8 +74,8 @@ public class FlightInitController {
         LocalDate endDate = startDate.plusMonths(3);
 
         LocalDate nextFriday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
-        LocalDate nextSaturday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
-        LocalDate nextSunday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        LocalDate nextSaturday = nextFriday.plusDays(1);
+        LocalDate nextSunday = nextSaturday.plusDays(1);
         LocalDate nextMonday = nextSunday.plusDays(1);
 
         while ((nextFriday.isBefore(endDate) || nextFriday.isEqual(endDate)) &&
@@ -97,5 +99,11 @@ public class FlightInitController {
         while (saturdays.size() > minSize) saturdays.remove(saturdays.size() - 1);
         while (sundays.size() > minSize) sundays.remove(sundays.size() - 1);
         while (mondays.size() > minSize) mondays.remove(mondays.size() - 1);
+    }
+
+    @GetMapping("get-all")
+    public @ResponseBody String getAll() {
+        List<Flight> flights = flightDataReceiverService.getAllFlights();
+        return flights.toString();
     }
 }

@@ -31,4 +31,8 @@ public class Stop {
     @JsonBackReference
     private Flight flight;
 
+    @ManyToOne
+    @JoinColumn(name = "return_flight_id")
+    @JsonBackReference
+    private Flight returnFlight;
 }

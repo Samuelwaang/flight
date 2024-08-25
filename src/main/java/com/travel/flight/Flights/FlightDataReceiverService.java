@@ -2,7 +2,13 @@ package com.travel.flight.Flights;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import reactor.core.publisher.Mono;
+
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,6 +22,9 @@ import java.util.List;
 public class FlightDataReceiverService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
 
     public FlightDataReceiverService(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
@@ -36,5 +45,17 @@ public class FlightDataReceiverService {
 
         String responseBody = response.getBody();
         return objectMapper.readValue(responseBody, new TypeReference<List<Flight>>(){});
+    }
+
+    public List<Flight> getAllFlights() {
+        String url = "http://localhost:8081/flight/all";
+
+        Mono<List<Flight>> flightsMono = webClientBuilder.build()
+                .get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
+
+        return flightsMono.block();
     }
 }

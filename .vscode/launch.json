@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "FlighAllTester",
+            "request": "launch",
+            "mainClass": "com.travel.flight.Flights.FlighAllTester",
+            "projectName": "flight"
+        },
+        {
+            "type": "java",
             "name": "FlightInitRunner",
             "request": "launch",
             "mainClass": "com.travel.flight.FlightInitRunner",

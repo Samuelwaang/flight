@@ -51,6 +51,18 @@ public class Flight {
     private List<Stop> stops;
     private int numStops;
 
+    // return flight data
+    private String returnAirline;
+    private String returnLeaveTime;
+    private String returnArrivalTime;
+    @OneToMany(mappedBy = "returnFlight", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Stop> returnStops;
+    private int returnNumStops;
+    private int returnTime;
+
+
+
     @ManyToMany(mappedBy = "flights", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<UserEntity> users = new HashSet<>();
@@ -64,27 +76,26 @@ public class Flight {
         this.users = users;
     }
 
-    // @Override
-    // public String toString() {
-
-    //     ReturnedFlight returnedFlight = new ReturnedFlight(id, airline, time, price, link, flightStart, flightDestination, leaveTime, arrivalTime, 
-    //     leaveDate, returnDay, stops, numStops);
-    //     return returnedFlight.toString();
-    //     // return "Flight{" +
-    //     //         "id=" + id +
-    //     //         ", airline='" + airline + '\'' +
-    //     //         ", time=" + time +
-    //     //         ", price=" + price +
-    //     //         ", link='" + link + '\'' +
-    //     //         ", flightStart='" + flightStart + '\'' +
-    //     //         ", flightDestination='" + flightDestination + '\'' +
-    //     //         ", leaveTime='" + leaveTime + '\'' +
-    //     //         ", arrivalTime='" + arrivalTime + '\'' +
-    //     //         ", leaveDate='" + leaveDate + '\'' +
-    //     //         ", returnDay='" + returnDay + '\'' +
-    //     //         ", stops='" + stops + '\'' +
-    //     //         ", numStops=" + numStops +
-    //     //         // Avoid printing users to prevent recursion
-    //     //         '}';
-    // }
+    @Override
+    public String toString() {
+        return "Flight{" +
+                "id=" + id +
+                ", airline='" + airline + '\'' +
+                ", time=" + time +
+                ", price=" + price +
+                ", link='" + link + '\'' +
+                ", flightStart='" + flightStart + '\'' +
+                ", flightDestination='" + flightDestination + '\'' +
+                ", leaveTime='" + leaveTime + '\'' +
+                ", arrivalTime='" + arrivalTime + '\'' +
+                ", leaveDate='" + leaveDate + '\'' +
+                ", returnDay='" + returnDay + '\'' +
+                ", numStops=" + numStops +
+                ", returnAirline='" + returnAirline + '\'' +
+                ", returnLeaveTime='" + returnLeaveTime + '\'' +
+                ", returnArrivalTime='" + returnArrivalTime + '\'' +
+                ", returnNumStops=" + returnNumStops +
+                ", returnTime=" + returnTime +
+                '}';
+    }
 }

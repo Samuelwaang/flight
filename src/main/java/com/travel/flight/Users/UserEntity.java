@@ -2,7 +2,9 @@ package com.travel.flight.Users;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -14,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.travel.flight.Flights.Flight;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -22,6 +26,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -57,7 +62,11 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "flight_id"))
     private Set<Flight> flights = new HashSet<>();
 
-    // Getters and setters for flights
+    // @ElementCollection
+    // @MapKeyJoinColumn(name = "flight_id")
+    // @Column(name = "desired_price")
+    // private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
+
     public Set<Flight> getFlights() {
         return flights;
     }
@@ -65,5 +74,4 @@ public class UserEntity {
     public void setFlights(Set<Flight> flights) {
         this.flights = flights;
     }
-
 }
