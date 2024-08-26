@@ -12,18 +12,18 @@ public class FlightTestRunner implements CommandLineRunner {
         this.flightService = flightService;
     }
 
-    @Override
-    public void run(String... args) {
-        flightService.testGroupingFlights();
-    }
+    // @Override
+    // public void run(String... args) {
+    //     flightService.testGroupingFlights();
+    // }
 
     // @Override
     // public void run(String... args) {
     //     flightService.callNewPricesApi();
     // }
 
-    // @Override
-    // public void run(String... args) {
-    //     flightService.callJustNewPricesApi();
-    // }
+    @Override
+    public void run(String... args) {
+        flightService.callJustNewPricesApi();
+    }
 }

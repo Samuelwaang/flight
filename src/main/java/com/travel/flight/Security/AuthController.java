@@ -115,17 +115,11 @@ public class AuthController {
             for (Cookie cookie : cookies) {
                 if ("jwt".equals(cookie.getName())) {
                     String token = cookie.getValue();
-                    System.out.println(token);
                     String email = jwtProvider.getEmailFromJWT(token);
-                    System.out.println(email);
                     Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
                     UserEntity user = optionalUser.get();
-                    System.out.println(user.getId());
                     Set<Flight> userFlights = user.getFlights();
-                    System.out.println(userFlights);
-                    System.out.println(userFlights.size());
                     if(jwtProvider.validateToken(token)) {
-                        System.out.println("validated");
                         return userFlights.toString();
                     }
                 }

@@ -32,7 +32,6 @@ public class FlightUpdateService {
                     .uri(url)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
-                    System.out.println(flightsMono.block());
             return flightsMono.block();
         } catch (Exception e) {
             e.printStackTrace();

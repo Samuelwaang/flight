@@ -67,11 +67,11 @@ public class UserEntity {
     @Column(name = "desired_price")
     private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
 
-    public Set<Flight> getFlights() {
-        return flights;
-    }
+    // public Set<Flight> getFlights() {
+    //     return flights;
+    // }
 
-    public void setFlights(Set<Flight> flights) {
-        this.flights = flights;
-    }
+    // public void setFlights(Set<Flight> flights) {
+    //     this.flights = flights;
+    // }
 }
