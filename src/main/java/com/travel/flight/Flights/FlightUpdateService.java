@@ -3,16 +3,27 @@ package com.travel.flight.Flights;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travel.flight.Flights.DTO.Flight;
 import com.travel.flight.Flights.DTO.FlightPageEntity;
+import com.travel.flight.Flights.DTO.FlightQuery;
+import com.travel.flight.Flights.DTO.LeaveDatePointer;
+import com.travel.flight.Flights.DTO.Stop;
 import com.travel.flight.Flights.DTO.UpdateFlightQuery;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,23 +35,22 @@ public class FlightUpdateService {
     @Autowired
     private FlightRepository flightRepository;
 
+    @Autowired
+    private LeaveDatePointerRepository pointerRepository;
+
+    @Autowired
+    private FlightDataReceiverService flightDataReceiverService;
+    @Autowired
+    private FlightSaveService flightSaveService;
+
+
+    private static final String POINTER_ID = "lastLeaveDatePointer";
+
     private final WebClient.Builder webClientBuilder;
 
     public FlightUpdateService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
-
-    // public List<Flight> getAllFlights() {
-    //     String url = "http://localhost:8081/flight/all";
-
-    //     Mono<List<Flight>> flightsMono = webClientBuilder.build()
-    //             .get()
-    //             .uri(url)
-    //             .retrieve()
-    //             .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
-
-    //     return flightsMono.block();
-    // }
 
     public Flux<Flight> getAllFlights(int page, int size) {
         String url = String.format("http://localhost:8081/flight/paged?page=%d&size=%d", page, size);
@@ -109,73 +119,61 @@ public class FlightUpdateService {
                 .collect(Collectors.toList());
     }
 
-    //updates the price and link to the flight
-    // public void callNewPricesApi() {
-    //     String url = "http://localhost:8082/data/update-price-link";
-    //     List<Flight> flights = getAllFlights();
-    //     List<List<Flight>> groupedFlights = groupFlights(flights);
-    //     for(List<Flight> subFlightList : groupedFlights) {
-    //         Mono<List<UpdateFlightQuery>> updateFlightQueriesMono = webClientBuilder.build()
-    //         .post()
-    //         .uri(url)
-    //         .bodyValue(subFlightList)
-    //         .retrieve()
-    //         .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {});
 
-    //         for(UpdateFlightQuery updateFlightQuery : updateFlightQueriesMono.block()) {
-    //             // update flight with new price and link
-    //             Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
-    //             Flight existingFlight = optionalFlight.get();
+    public void scheduleTask() {
+        LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID).orElse(new LeaveDatePointer(POINTER_ID, null));
 
-    //             System.out.println("Updating flight: " + updateFlightQuery.getId());
+        List<Flight> latestFlights = flightRepository.findAllWithLatestLeaveDate();
 
-    //             existingFlight.setPrice(updateFlightQuery.getPrice());
-    //             existingFlight.setLink(updateFlightQuery.getLink());
-    //             flightRepository.save(existingFlight);
-    //         }
-    //     }
-    // }
+        if (!latestFlights.isEmpty()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate leaveDate = LocalDate.parse(latestFlights.get(0).getLeaveDate(), formatter);
+            LocalDate nextFriday = leaveDate.with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.FRIDAY));
+            LocalDate nextSaturday = nextFriday.plusDays(1);
+            LocalDate nextSunday = nextSaturday.plusDays(1);
+            LocalDate nextMonday = nextSunday.plusDays(1);
 
-    // public void testGroupingFlights() {
-    //     // Step 1: Retrieve the data
-    //     List<Flight> flights = getAllFlights();
+            makeFlightQueries(nextFriday, nextSaturday, nextSunday, nextMonday, "san", "pit");
 
-    //     // Step 2: Group the data
-    //     List<List<Flight>> groupedFlights = groupFlights(flights);
+            pointer.setLastProcessedLeaveDate(latestFlights.get(0).getLeaveDate());
+            pointerRepository.save(pointer);
 
-    //     // Step 3: Print the grouped data
-    //     for (List<Flight> group : groupedFlights) {
-    //         System.out.println("Group:");
-    //         for (Flight flight : group) {
-    //             System.out.println(flight);
-    //         }
-    //         System.out.println(); // Add a blank line between groups
-    //     }
-    // }
+            System.out.println("Next Friday after " + leaveDate + " is " + nextFriday);
+        }
+    }
 
-    // // updates just the prices
-    // public void callJustNewPricesApi() {
-    //     String url = "http://localhost:8082/data/update-price";
-    //     List<Flight> flights = getAllFlights();
-    //     List<List<Flight>> groupedFlights = groupFlights(flights);
-    //     for(List<Flight> subFlightList : groupedFlights) {
-    //         Mono<List<UpdateFlightQuery>> updateFlightQueriesMono = webClientBuilder.build()
-    //         .post()
-    //         .uri(url)
-    //         .bodyValue(subFlightList)
-    //         .retrieve()
-    //         .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {});
+    private void saveFlight(String jsonBody) throws IOException {
+        String apiUrl = "http://localhost:8082/data/get";
+        List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
+        flightSaveService.saveFlights(flights);
 
-    //         for(UpdateFlightQuery updateFlightQuery : updateFlightQueriesMono.block()) {
-    //             // update flight with new price and link
-                // Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
-                // Flight existingFlight = optionalFlight.get();
+        for (Flight flight : flights) {
+            for (Stop stop : flight.getStops()) {
+                stop.setFlight(flight);
+            }
+        }
+    }
 
-                // System.out.println("Updating flight: " + updateFlightQuery.getId());
+    public ResponseEntity<String> makeFlightQueries(LocalDate friday, LocalDate saturday, LocalDate sunday, LocalDate monday, String startPoint, String destination) {
+        ObjectMapper objectMapper = new ObjectMapper();
 
-                // existingFlight.setPrice(updateFlightQuery.getPrice());
-                // flightRepository.save(existingFlight);
-    //         }
-    //     }
-    // }
+        FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, friday.toString(), sunday.toString());
+        FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, friday.toString(), monday.toString());
+        FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturday.toString(), sunday.toString());
+        FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturday.toString(), monday.toString());
+
+        try {
+                saveFlight(objectMapper.writeValueAsString(fridayToSunday));
+                saveFlight(objectMapper.writeValueAsString(fridayToMonday));
+                saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
+                saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
+            } 
+        catch (Exception e) {
+                return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
+        }
+        return ResponseEntity.ok("Flight data initialized successfully");
+    }
+
+    
+
 }

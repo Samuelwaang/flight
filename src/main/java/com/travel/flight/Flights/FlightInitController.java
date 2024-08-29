@@ -53,7 +53,8 @@ public class FlightInitController {
                 saveFlight(objectMapper.writeValueAsString(fridayToMonday));
                 saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
                 saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
-            } catch (Exception e) {
+            } 
+            catch (Exception e) {
                 return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
             }
         }

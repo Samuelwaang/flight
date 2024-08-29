@@ -1,6 +1,8 @@
 package com.travel.flight.Flights;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,4 +21,7 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
     List<Flight> findByLeaveDateAndReturnDay(String leaveDate, String returnDay);
 
     List<Flight> findByLeaveDate(String leaveDate);
+    
+    @Query("SELECT f FROM Flight f WHERE f.leaveDate = (SELECT MAX(f2.leaveDate) FROM Flight f2)")
+    List<Flight> findAllWithLatestLeaveDate();
 }
