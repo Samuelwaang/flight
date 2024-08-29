@@ -54,7 +54,7 @@ public class SchedulingTasks {
     }
 
     @Scheduled(cron = "59 59 23 * * *", zone = "America/Los_Angeles")
-    public void deleteOldFlights() {
+    public synchronized void deleteOldFlights() {
         LocalDate yesterday = LocalDate.now().minusDays(1);
         List<Flight> flights = flightRepository.findByLeaveDate(yesterday.toString());
 
@@ -74,7 +74,7 @@ public class SchedulingTasks {
     }
 
     @Scheduled(cron = "0 0 0/3 * * ?")
-    public void updatePrice() {
+    public synchronized void updatePrice() {
         newPrices();
     }
 
@@ -139,7 +139,7 @@ public class SchedulingTasks {
     }
 
     @Scheduled(cron = "59 59 23 ? * THU")
-    public void weeklyNewFlights() {
+    public synchronized void weeklyNewFlights() {
         LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID).orElse(new LeaveDatePointer(POINTER_ID, null));
 
         List<Flight> latestFlights = flightRepository.findAllWithLatestLeaveDate();
