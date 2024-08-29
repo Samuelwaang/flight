@@ -9,6 +9,9 @@
 	import java.util.Set;
 
 	import org.springframework.beans.factory.annotation.Autowired;
+	import org.springframework.data.domain.Page;
+	import org.springframework.data.domain.PageRequest;
+	import org.springframework.data.domain.Pageable;
 	import org.springframework.http.HttpStatus;
 	import org.springframework.http.ResponseEntity;
 	import org.springframework.stereotype.Controller;
@@ -21,7 +24,10 @@
 	import org.springframework.web.bind.annotation.RequestParam;
 	import org.springframework.web.bind.annotation.ResponseBody;
 
-	import com.travel.flight.Users.UserEntity;
+import com.travel.flight.Flights.DTO.Flight;
+import com.travel.flight.Flights.DTO.PriceThresholdRequest;
+import com.travel.flight.Flights.DTO.Stop;
+import com.travel.flight.Users.UserEntity;
 	import com.travel.flight.Users.UserRepository;
 
 	import jakarta.transaction.Transactional;
@@ -95,7 +101,7 @@ public class FlightController {
 	}
 	
 	@GetMapping(path = "/all")
-	public @ResponseBody Iterable<Flight> getAllUsers() {
+	public @ResponseBody Iterable<Flight> getAllFlights() {
 		try {
 			return flightRepository.findAll();
 		}
@@ -103,8 +109,23 @@ public class FlightController {
 			e.printStackTrace();
 		}
 		return null;
-		
 	}
+
+	@GetMapping(path = "/paged")
+	public @ResponseBody Page<Flight> getAllFlightsByPage(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "50") int size) {
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			return flightRepository.findAll(pageable);
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Page.empty();
+	}
+
+	
 
 	@PostMapping("/addFlightToUser/{flightId}/{userId}")
 	public @ResponseBody String addFlightToUser(@PathVariable(name = "flightId") long flightId, @PathVariable(name = "userId") long userId) {
@@ -211,5 +232,32 @@ public class FlightController {
 		userRepository.save(user);
 
 		return ResponseEntity.ok("Price threshold set successfully for flight ID " + request.getFlightId());
+	}
+
+	@Transactional
+	@DeleteMapping("/deleteFlightsByDate")
+	public ResponseEntity<String> deleteFlightsByDate(@RequestParam String leaveDate, @RequestParam String returnDay) {
+		try {
+			List<Flight> flightsToDelete = flightRepository.findByLeaveDateAndReturnDay(leaveDate, returnDay);
+	
+			if (flightsToDelete.isEmpty()) {
+				return ResponseEntity.ok("No flights found with the specified leaveDate and returnDay.");
+			}
+	
+			// clear associations for each flight
+			List<UserEntity> users = userRepository.findAll();
+			for (UserEntity user : users) {
+				user.getFlights().removeAll(flightsToDelete); 
+			}
+			userRepository.saveAll(users);
+	
+			// delete flights
+			flightRepository.deleteAll(flightsToDelete);
+	
+			return ResponseEntity.ok("Flights with the specified leaveDate and returnDay deleted successfully.");
+		} 
+		catch (Exception e) {
+			return ResponseEntity.status(500).body("An error occurred while deleting flights: " + e.getMessage());
+		}
 	}
 } 

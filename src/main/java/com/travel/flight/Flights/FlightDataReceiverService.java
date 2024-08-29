@@ -2,6 +2,7 @@ package com.travel.flight.Flights;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.travel.flight.Flights.DTO.Flight;
 
 import reactor.core.publisher.Mono;
 

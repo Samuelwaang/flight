@@ -6,6 +6,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.travel.flight.Flights.DTO.Flight;
 import com.travel.flight.Users.UserEntity;
 import com.travel.flight.Users.UserRepository;
 

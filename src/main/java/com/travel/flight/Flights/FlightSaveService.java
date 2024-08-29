@@ -3,6 +3,8 @@ package com.travel.flight.Flights;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.travel.flight.Flights.DTO.Flight;
+
 import java.util.ArrayList;
 import java.util.List;
 

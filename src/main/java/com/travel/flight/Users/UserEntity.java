@@ -13,7 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.travel.flight.Flights.Flight;
+import com.travel.flight.Flights.DTO.Flight;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

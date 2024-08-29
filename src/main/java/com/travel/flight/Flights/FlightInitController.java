@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.travel.flight.Flights.DTO.Flight;
+import com.travel.flight.Flights.DTO.FlightQuery;
+import com.travel.flight.Flights.DTO.Stop;
 import com.travel.flight.Users.UserRepository;
 
 @RestController

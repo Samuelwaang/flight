@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.travel.flight.Flights.Flight;
+import com.travel.flight.Flights.DTO.Flight;
 import com.travel.flight.Users.Role;
 import com.travel.flight.Users.RoleRepository;
 import com.travel.flight.Users.UserRepository;

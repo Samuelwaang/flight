@@ -1,4 +1,4 @@
-package com.travel.flight.Flights;
+package com.travel.flight.Flights.DTO;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
