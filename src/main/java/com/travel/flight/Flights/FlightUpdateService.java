@@ -42,21 +42,30 @@ public class FlightUpdateService {
     //     return flightsMono.block();
     // }
 
-    public Flux<Flight> getAllFlights() {
-        String url = "http://localhost:8081/flight/paged?page=0&size=50";  // Full URL with parameters
+    public Flux<Flight> getAllFlights(int page, int size) {
+        String url = String.format("http://localhost:8081/flight/paged?page=%d&size=%d", page, size);
     
         return webClientBuilder.build()
                 .get()
-                .uri(url)  // Use the full URL directly
+                .uri(url)
                 .retrieve()
-                .bodyToMono(FlightPageEntity.class)  // Map the response to the FlightPage wrapper class
-                .flatMapMany(flightPage -> Flux.fromIterable(flightPage.getContent()));  // Convert List<Flight> to Flux<Flight>
+                .bodyToMono(FlightPageEntity.class)
+                .flatMapMany(flightPage -> {
+                    Flux<Flight> currentPageFlights = Flux.fromIterable(flightPage.getContent());
+                    
+                    if (flightPage.getNumber() < flightPage.getTotalPages() - 1) {
+                        return Flux.concat(currentPageFlights, getAllFlights(page + 1, size));
+                    } 
+                    else {
+                        return currentPageFlights;
+                    }
+                });
     }
 
     public void newPrices() {
-        WebClient webClient = webClientBuilder.build(); // Build the WebClient instance
+        WebClient webClient = webClientBuilder.build();
     
-        Flux<Flight> flightFlux = getAllFlights(); // Your source Flux
+        Flux<Flight> flightFlux = getAllFlights(0, 50);
     
         flightFlux.groupBy(flight -> 
             List.of(
@@ -67,24 +76,28 @@ public class FlightUpdateService {
             )
         )
         .concatMap(groupedFlux -> 
-            groupedFlux.collectList() // Collect items in each group to a List
+            groupedFlux.collectList() 
                 .flatMap(list -> 
                     webClient.post()
                         .uri("http://localhost:8082/data/update-price-link")
-                        .bodyValue(list) // Send the list as the body
+                        .bodyValue(list) 
                         .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) // Retrieve the list of UpdateFlightQuery
+                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) 
                 )
         )
         .concatMap(updateFlightQueries -> 
-            Flux.fromIterable(updateFlightQueries) // Convert the returned list into a Flux<UpdateFlightQuery>
+            Flux.fromIterable(updateFlightQueries) 
         )
         .doOnNext(updateFlightQuery -> {
-            // Perform your action on each UpdateFlightQuery element
-            System.out.println("Processing UpdateFlightQuery: " + updateFlightQuery);
-            // Add your custom logic here
+            Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
+            Flight existingFlight = optionalFlight.get();
+
+            System.out.println("Updating flight: " + updateFlightQuery.getId());
+
+            existingFlight.setPrice(updateFlightQuery.getPrice());
+            flightRepository.save(existingFlight);
         })
-        .subscribe(); // Trigger the processing
+        .subscribe(); 
     }
 
     public List<List<Flight>> groupFlights(List<Flight> flights) {
