@@ -73,13 +73,6 @@ public class SchedulingTasks {
         flightRepository.deleteAll(flights);
     }
 
-    @Scheduled(cron = "0 0 0/3 * * ?")
-    public synchronized void updatePrice() {
-        newPrices();
-    }
-
-
-
     public Flux<Flight> getAllFlights(int page, int size) {
         String url = String.format("http://localhost:8081/flight/paged?page=%d&size=%d", page, size);
     
@@ -100,7 +93,47 @@ public class SchedulingTasks {
                 });
     }
 
-    public void newPrices() {
+    @Scheduled(cron = "0 0 3,6,9,12,15,18,21 * * ?")
+    public synchronized void newPrices() {
+        WebClient webClient = webClientBuilder.build();
+    
+        Flux<Flight> flightFlux = getAllFlights(0, 50);
+    
+        flightFlux.groupBy(flight -> 
+            List.of(
+                flight.getLeaveDate(), 
+                flight.getReturnDay(), 
+                flight.getFlightStart(), 
+                flight.getFlightDestination()
+            )
+        )
+        .concatMap(groupedFlux -> 
+            groupedFlux.collectList() 
+                .flatMap(list -> 
+                    webClient.post()
+                        .uri("http://localhost:8082/data/update-price")
+                        .bodyValue(list) 
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) 
+                )
+        )
+        .concatMap(updateFlightQueries -> 
+            Flux.fromIterable(updateFlightQueries) 
+        )
+        .doOnNext(updateFlightQuery -> {
+            Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
+            Flight existingFlight = optionalFlight.get();
+
+            System.out.println("Updating flight: " + updateFlightQuery.getId());
+
+            existingFlight.setPrice(updateFlightQuery.getPrice());
+            flightRepository.save(existingFlight);
+        })
+        .subscribe(); 
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public synchronized void newPricesAndLink() {
         WebClient webClient = webClientBuilder.build();
     
         Flux<Flight> flightFlux = getAllFlights(0, 50);
@@ -133,6 +166,7 @@ public class SchedulingTasks {
             System.out.println("Updating flight: " + updateFlightQuery.getId());
 
             existingFlight.setPrice(updateFlightQuery.getPrice());
+            existingFlight.setLink(updateFlightQuery.getLink());
             flightRepository.save(existingFlight);
         })
         .subscribe(); 
@@ -156,8 +190,6 @@ public class SchedulingTasks {
 
             pointer.setLastProcessedLeaveDate(latestFlights.get(0).getLeaveDate());
             pointerRepository.save(pointer);
-
-            System.out.println("Next Friday after " + leaveDate + " is " + nextFriday);
         }
     }
 

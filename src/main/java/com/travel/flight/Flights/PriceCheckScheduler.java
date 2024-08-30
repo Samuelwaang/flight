@@ -24,7 +24,7 @@ public class PriceCheckScheduler {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Scheduled(fixedRate = 3600000) // Check every hour
+    @Scheduled(fixedRate = 3600000)
     public void checkFlightPrices() {
         for (UserEntity user : userRepository.findAll()) {
             for (Map.Entry<Flight, Double> entry : user.getFlightPriceThresholds().entrySet()) {
