@@ -29,6 +29,6 @@ public class FlightTestRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        flightService.scheduleTask();
+        flightService.sendNotification("samuelwaang@gmail.com");
     }
 }

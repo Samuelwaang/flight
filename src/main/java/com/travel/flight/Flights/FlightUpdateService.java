@@ -14,6 +14,8 @@ import com.travel.flight.Flights.DTO.UpdateFlightQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import reactor.core.publisher.Flux;
@@ -172,6 +174,19 @@ public class FlightUpdateService {
                 return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
         }
         return ResponseEntity.ok("Flight data initialized successfully");
+    }
+
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    public void sendNotification(String userEmail) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(userEmail);
+        message.setSubject("Price Alert: Flight Price Dropped");
+        message.setText("hi");
+
+        mailSender.send(message);
     }
 
     
