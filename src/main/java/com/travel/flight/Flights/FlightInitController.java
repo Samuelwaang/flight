@@ -43,18 +43,21 @@ public class FlightInitController {
         getDates(); // Ensure dates are populated before using them
         ObjectMapper objectMapper = new ObjectMapper();
         for (int i = 0; i < fridays.size(); i++) {
-            FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, fridays.get(i).toString(), sundays.get(i).toString());
-            FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, fridays.get(i).toString(), mondays.get(i).toString());
-            FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(), sundays.get(i).toString());
-            FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(), mondays.get(i).toString());
+            FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, fridays.get(i).toString(),
+                    sundays.get(i).toString());
+            FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, fridays.get(i).toString(),
+                    mondays.get(i).toString());
+            FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(),
+                    sundays.get(i).toString());
+            FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(),
+                    mondays.get(i).toString());
 
             try {
                 saveFlight(objectMapper.writeValueAsString(fridayToSunday));
                 saveFlight(objectMapper.writeValueAsString(fridayToMonday));
                 saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
                 saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
-            } 
-            catch (Exception e) {
+            } catch (Exception e) {
                 return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
             }
         }
@@ -62,7 +65,7 @@ public class FlightInitController {
     }
 
     private void saveFlight(String jsonBody) throws IOException {
-        String apiUrl = "http://localhost:8082/data/get";
+        String apiUrl = "http://localhost:8080/data/get";
         List<Flight> flights = flightDataReceiverService.callExternalApi(apiUrl, jsonBody);
         flightSaveService.saveFlights(flights);
 
@@ -75,17 +78,19 @@ public class FlightInitController {
 
     private void getDates() {
         LocalDate startDate = LocalDate.now();
-        LocalDate endDate = startDate.plusMonths(3);
-
-        LocalDate nextFriday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
+        // LocalDate endDate = startDate.plusMonths(3);
+        // LocalDate nextFriday =
+        // startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
+        LocalDate nextFriday = LocalDate.of(2024, 11, 8);
         LocalDate nextSaturday = nextFriday.plusDays(1);
         LocalDate nextSunday = nextSaturday.plusDays(1);
         LocalDate nextMonday = nextSunday.plusDays(1);
 
+        LocalDate endDate = nextFriday.plusMonths(1); // interrupted delete later
         while ((nextFriday.isBefore(endDate) || nextFriday.isEqual(endDate)) &&
-               (nextSaturday.isBefore(endDate) || nextSaturday.isEqual(endDate)) &&
-               (nextSunday.isBefore(endDate) || nextSunday.isEqual(endDate)) &&
-               (nextMonday.isBefore(endDate) || nextMonday.isEqual(endDate))) {
+                (nextSaturday.isBefore(endDate) || nextSaturday.isEqual(endDate)) &&
+                (nextSunday.isBefore(endDate) || nextSunday.isEqual(endDate)) &&
+                (nextMonday.isBefore(endDate) || nextMonday.isEqual(endDate))) {
 
             fridays.add(nextFriday);
             saturdays.add(nextSaturday);
@@ -99,10 +104,14 @@ public class FlightInitController {
         }
 
         int minSize = Math.min(Math.min(fridays.size(), saturdays.size()), Math.min(sundays.size(), mondays.size()));
-        while (fridays.size() > minSize) fridays.remove(fridays.size() - 1);
-        while (saturdays.size() > minSize) saturdays.remove(saturdays.size() - 1);
-        while (sundays.size() > minSize) sundays.remove(sundays.size() - 1);
-        while (mondays.size() > minSize) mondays.remove(mondays.size() - 1);
+        while (fridays.size() > minSize)
+            fridays.remove(fridays.size() - 1);
+        while (saturdays.size() > minSize)
+            saturdays.remove(saturdays.size() - 1);
+        while (sundays.size() > minSize)
+            sundays.remove(sundays.size() - 1);
+        while (mondays.size() > minSize)
+            mondays.remove(mondays.size() - 1);
     }
 
     @GetMapping("get-all")

@@ -35,11 +35,10 @@ import com.travel.flight.Users.UserEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    
+
     private AuthenticationManager authenticationManager;
     private UserRepository userRepository;
     private RoleRepository roleRepository;
@@ -66,16 +65,29 @@ public class AuthController {
                 .httpOnly(true) // make true for deployment
                 .secure(false) // make true for deployment
                 .path("/")
-                .maxAge(60*60)
+                .maxAge(60 * 60)
                 .sameSite("None; Secure") // "None; Secure" for deployment
                 .build();
-        
+
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString()).build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // set max age to 0 to delete the cookie
+
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok().body("Logged out successfully");
     }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
-        if(userRepository.existsByEmail(registerDto.getEmail())) {
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
             return new ResponseEntity<>("Email already used", HttpStatus.BAD_REQUEST);
         }
         UserEntity user = new UserEntity();
@@ -97,7 +109,6 @@ public class AuthController {
             for (Cookie cookie : cookies) {
                 if ("jwt".equals(cookie.getName())) {
                     String token = cookie.getValue();
-                    System.out.println("check-auth token: " + token);
                     boolean valid = jwtProvider.validateToken(token);
                     if (valid) {
                         return new ResponseEntity<>("authorized", HttpStatus.OK);
@@ -105,6 +116,7 @@ public class AuthController {
                 }
             }
         }
+        System.out.println("unauthed");
         return new ResponseEntity<>("not authorized", HttpStatus.UNAUTHORIZED);
     }
 
@@ -119,17 +131,18 @@ public class AuthController {
                     Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
                     UserEntity user = optionalUser.get();
                     Set<Flight> userFlights = user.getFlights();
-                    if(jwtProvider.validateToken(token)) {
+                    if (jwtProvider.validateToken(token)) {
                         return userFlights.toString();
                     }
                 }
             }
         }
         return null;
-    }    
+    }
+
     @GetMapping("/all")
     public @ResponseBody Iterable<UserEntity> getAllUsers() {
         return userRepository.findAll();
     }
-    
+
 }

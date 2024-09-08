@@ -14,13 +14,13 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtProvider {
-    
+
     private static final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    
+
     public String generateToken(Authentication authentication) {
         String email = authentication.getName();
         Date currentDate = new Date();
-        Date expiryDate = new Date(currentDate.getTime() + 60*60*1000);
+        Date expiryDate = new Date(currentDate.getTime() + 60 * 60 * 1000);
 
         String token = Jwts.builder()
                 .setSubject(email)
@@ -28,12 +28,11 @@ public class JwtProvider {
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
-        System.out.println("generated token: " + token);
         return token;
     }
 
     public String getEmailFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()       
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
@@ -45,8 +44,7 @@ public class JwtProvider {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new AuthenticationCredentialsNotFoundException("JWT expired/incorrect");
         }
     }
