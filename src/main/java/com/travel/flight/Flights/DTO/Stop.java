@@ -1,6 +1,5 @@
 package com.travel.flight.Flights.DTO;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Embeddable;
@@ -25,7 +24,7 @@ public class Stop {
 
     private String location;
     private int time;
-    
+
     @ManyToOne
     @JoinColumn(name = "flight_id")
     @JsonBackReference(value = "flightStops")

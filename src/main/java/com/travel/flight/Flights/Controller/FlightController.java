@@ -1,12 +1,14 @@
-package com.travel.flight.Flights;
+package com.travel.flight.Flights.Controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,12 +27,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.travel.flight.Flights.FlightDataReceiverService;
+import com.travel.flight.Flights.FlightRepository;
+import com.travel.flight.Flights.FlightSaveService;
 import com.travel.flight.Flights.DTO.Flight;
 import com.travel.flight.Flights.DTO.PriceThresholdRequest;
 import com.travel.flight.Flights.DTO.Stop;
+import com.travel.flight.Security.JwtProvider;
 import com.travel.flight.Users.UserEntity;
 import com.travel.flight.Users.UserRepository;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
 @RestController
@@ -45,6 +53,8 @@ public class FlightController {
 	private FlightDataReceiverService flightDataReceiverService;
 	@Autowired
 	private FlightSaveService flightSaveService;
+	@Autowired
+	private JwtProvider jwtProvider;
 
 	@PostMapping(path = "/post")
 	public @ResponseBody String addNewFlight(@RequestParam String airline, @RequestParam int time,
@@ -122,17 +132,31 @@ public class FlightController {
 		return Page.empty();
 	}
 
-	@PostMapping("/addFlightToUser/{flightId}/{userId}")
-	public @ResponseBody String addFlightToUser(@PathVariable(name = "flightId") long flightId,
-			@PathVariable(name = "userId") long userId) {
-		Optional<UserEntity> possibleUser = userRepository.findById(userId);
-		UserEntity user = possibleUser.get();
-		System.out.println(user.getEmail());
+	@PostMapping("/addFlightToUser/{flightId}")
+	public @ResponseBody ResponseEntity<String> addFlightToUser(@PathVariable(name = "flightId") long flightId,
+			HttpServletRequest request) {
+
+		UserEntity user = null;
+		Cookie[] cookies = request.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if ("jwt".equals(cookie.getName())) {
+					String token = cookie.getValue();
+					if (jwtProvider.validateToken(token)) {
+						String email = jwtProvider.getEmailFromJWT(token);
+						Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
+						user = optionalUser.get();
+					}
+				}
+			}
+		}
 		Optional<Flight> possibleFlight = flightRepository.findById(flightId);
 		Flight flight = possibleFlight.get();
-		System.out.println(flight.getAirline());
 
 		// update flight list for user
+		if (user == null) {
+			return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+		}
 		Set<Flight> flights = user.getFlights();
 		flights.add(flight);
 		user.setFlights(flights);
@@ -144,7 +168,7 @@ public class FlightController {
 		flight.setUsers(users);
 		flightRepository.save(flight);
 
-		return "flight saved";
+		return ResponseEntity.ok("User successfully added flight");
 	}
 
 	@GetMapping(path = "flightsByUser")
@@ -270,7 +294,7 @@ public class FlightController {
 	public ResponseEntity<List<Flight>> getCheapestFlights(
 			@RequestParam String flightStart,
 			@RequestParam String flightDestination) {
-		Pageable pageable = PageRequest.of(0, 10);
+		Pageable pageable = PageRequest.of(0, 50);
 		List<Flight> flights = flightRepository.findCheapestFlights(flightStart, flightDestination, pageable);
 		if (flights.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -279,18 +303,13 @@ public class FlightController {
 		}
 	}
 
-	@GetMapping("/cheapest-excluding")
-	public ResponseEntity<List<Flight>> getCheapestFlightsExcludingAirlines(
+	@GetMapping("/cheapest-by-airline")
+	public List<Flight> getCheapestFlights(
 			@RequestParam String flightStart,
 			@RequestParam String flightDestination,
-			@RequestParam List<String> excludedAirlines) {
-		Pageable pageable = PageRequest.of(0, 10);
-		List<Flight> flights = flightRepository.findCheapestFlightsExcludingAirlines(flightStart, flightDestination,
-				excludedAirlines, pageable);
-		if (flights.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		} else {
-			return ResponseEntity.ok(flights);
-		}
+			@RequestParam(required = false) List<String> airlines) {
+		Pageable pageable = PageRequest.of(0, 50);
+		return flightRepository.findFlightsWithRegexp(flightStart, flightDestination, "UNITED", pageable);
 	}
+
 }

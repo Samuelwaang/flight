@@ -1,6 +1,7 @@
 package com.travel.flight.Security;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -121,7 +122,7 @@ public class AuthController {
     }
 
     @GetMapping("/get-flights")
-    public String getFlightsFromJwt(HttpServletRequest request) {
+    public ResponseEntity<Set<Flight>> getFlightsFromJwt(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -132,12 +133,12 @@ public class AuthController {
                     UserEntity user = optionalUser.get();
                     Set<Flight> userFlights = user.getFlights();
                     if (jwtProvider.validateToken(token)) {
-                        return userFlights.toString();
+                        return ResponseEntity.ok(userFlights);
                     }
                 }
             }
         }
-        return null;
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     @GetMapping("/all")
