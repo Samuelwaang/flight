@@ -17,7 +17,7 @@ public class FlightSaveService {
     public List<Flight> saveFlights(List<Flight> flights) {
         List<Flight> flightList = new ArrayList<>();
         Iterable<Flight> iterableFlights = flightRepository.saveAll(flights);
-        for(Flight flight : iterableFlights) {
+        for (Flight flight : iterableFlights) {
             flightList.add(flight);
         }
         return flightList;

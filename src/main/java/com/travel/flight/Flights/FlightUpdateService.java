@@ -45,7 +45,6 @@ public class FlightUpdateService {
     @Autowired
     private FlightSaveService flightSaveService;
 
-
     private static final String POINTER_ID = "lastLeaveDatePointer";
 
     private final WebClient.Builder webClientBuilder;
@@ -56,7 +55,7 @@ public class FlightUpdateService {
 
     public Flux<Flight> getAllFlights(int page, int size) {
         String url = String.format("http://localhost:8081/flight/paged?page=%d&size=%d", page, size);
-    
+
         return webClientBuilder.build()
                 .get()
                 .uri(url)
@@ -64,11 +63,10 @@ public class FlightUpdateService {
                 .bodyToMono(FlightPageEntity.class)
                 .flatMapMany(flightPage -> {
                     Flux<Flight> currentPageFlights = Flux.fromIterable(flightPage.getContent());
-                    
+
                     if (flightPage.getNumber() < flightPage.getTotalPages() - 1) {
                         return Flux.concat(currentPageFlights, getAllFlights(page + 1, size));
-                    } 
-                    else {
+                    } else {
                         return currentPageFlights;
                     }
                 });
@@ -76,40 +74,32 @@ public class FlightUpdateService {
 
     public void newPrices() {
         WebClient webClient = webClientBuilder.build();
-    
+
         Flux<Flight> flightFlux = getAllFlights(0, 50);
-    
-        flightFlux.groupBy(flight -> 
-            List.of(
-                flight.getLeaveDate(), 
-                flight.getReturnDay(), 
-                flight.getFlightStart(), 
-                flight.getFlightDestination()
-            )
-        )
-        .concatMap(groupedFlux -> 
-            groupedFlux.collectList() 
-                .flatMap(list -> 
-                    webClient.post()
-                        .uri("http://localhost:8082/data/update-price-link")
-                        .bodyValue(list) 
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) 
-                )
-        )
-        .concatMap(updateFlightQueries -> 
-            Flux.fromIterable(updateFlightQueries) 
-        )
-        .doOnNext(updateFlightQuery -> {
-            Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
-            Flight existingFlight = optionalFlight.get();
 
-            System.out.println("Updating flight: " + updateFlightQuery.getId());
+        flightFlux.groupBy(flight -> List.of(
+                flight.getLeaveDate(),
+                flight.getReturnDay(),
+                flight.getFlightStart(),
+                flight.getFlightDestination()))
+                .concatMap(groupedFlux -> groupedFlux.collectList()
+                        .flatMap(list -> webClient.post()
+                                .uri("http://localhost:8082/data/update-price-link")
+                                .bodyValue(list)
+                                .retrieve()
+                                .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {
+                                })))
+                .concatMap(updateFlightQueries -> Flux.fromIterable(updateFlightQueries))
+                .doOnNext(updateFlightQuery -> {
+                    Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
+                    Flight existingFlight = optionalFlight.get();
 
-            existingFlight.setPrice(updateFlightQuery.getPrice());
-            flightRepository.save(existingFlight);
-        })
-        .subscribe(); 
+                    System.out.println("Updating flight: " + updateFlightQuery.getId());
+
+                    existingFlight.setPrice(updateFlightQuery.getPrice());
+                    flightRepository.save(existingFlight);
+                })
+                .subscribe();
     }
 
     public List<List<Flight>> groupFlights(List<Flight> flights) {
@@ -121,9 +111,9 @@ public class FlightUpdateService {
                 .collect(Collectors.toList());
     }
 
-
     public void scheduleTask() {
-        LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID).orElse(new LeaveDatePointer(POINTER_ID, null));
+        LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID)
+                .orElse(new LeaveDatePointer(POINTER_ID, null));
 
         List<Flight> latestFlights = flightRepository.findAllWithLatestLeaveDate();
 
@@ -156,7 +146,8 @@ public class FlightUpdateService {
         }
     }
 
-    public ResponseEntity<String> makeFlightQueries(LocalDate friday, LocalDate saturday, LocalDate sunday, LocalDate monday, String startPoint, String destination) {
+    public ResponseEntity<String> makeFlightQueries(LocalDate friday, LocalDate saturday, LocalDate sunday,
+            LocalDate monday, String startPoint, String destination) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, friday.toString(), sunday.toString());
@@ -165,17 +156,15 @@ public class FlightUpdateService {
         FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturday.toString(), monday.toString());
 
         try {
-                saveFlight(objectMapper.writeValueAsString(fridayToSunday));
-                saveFlight(objectMapper.writeValueAsString(fridayToMonday));
-                saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
-                saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
-            } 
-        catch (Exception e) {
-                return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
+            saveFlight(objectMapper.writeValueAsString(fridayToSunday));
+            saveFlight(objectMapper.writeValueAsString(fridayToMonday));
+            saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
+            saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
         }
         return ResponseEntity.ok("Flight data initialized successfully");
     }
-
 
     @Autowired
     private JavaMailSender mailSender;
@@ -188,7 +177,5 @@ public class FlightUpdateService {
 
         mailSender.send(message);
     }
-
-    
 
 }

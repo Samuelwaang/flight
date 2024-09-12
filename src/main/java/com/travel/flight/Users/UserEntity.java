@@ -44,34 +44,23 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class UserEntity {
 
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    @EqualsAndHashCode.Include
-    private long id;
-    private String email;
-    private String password;
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        @EqualsAndHashCode.Include
+        private long id;
+        private String email;
+        private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(name="user_roles", joinColumns = @JoinColumn(name="user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
-    private List<Role> roles = new ArrayList<>();
+        @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+        @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
+        private List<Role> roles = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(name = "user_flights",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "flight_id"))
-    private Set<Flight> flights = new HashSet<>();
+        @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+        @JoinTable(name = "user_flights", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "flight_id"))
+        private Set<Flight> flights = new HashSet<>();
 
-    @ElementCollection
-    @MapKeyJoinColumn(name = "flight_id")
-    @Column(name = "desired_price")
-    private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
-
-    // public Set<Flight> getFlights() {
-    //     return flights;
-    // }
-
-    // public void setFlights(Set<Flight> flights) {
-    //     this.flights = flights;
-    // }
+        @ElementCollection
+        @MapKeyJoinColumn(name = "flight_id")
+        @Column(name = "desired_price")
+        private Map<Flight, Double> flightPriceThresholds = new HashMap<>();
 }

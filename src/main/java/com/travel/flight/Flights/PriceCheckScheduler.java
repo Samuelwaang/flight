@@ -16,9 +16,6 @@ import java.util.Map;
 public class PriceCheckScheduler {
 
     @Autowired
-    private FlightRepository flightRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired

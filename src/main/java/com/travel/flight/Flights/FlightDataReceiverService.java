@@ -38,14 +38,14 @@ public class FlightDataReceiverService {
         HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-            url,
-            HttpMethod.POST,
-            request,
-            String.class
-        );
+                url,
+                HttpMethod.POST,
+                request,
+                String.class);
 
         String responseBody = response.getBody();
-        return objectMapper.readValue(responseBody, new TypeReference<List<Flight>>(){});
+        return objectMapper.readValue(responseBody, new TypeReference<List<Flight>>() {
+        });
     }
 
     public List<Flight> getAllFlights() {
@@ -55,7 +55,8 @@ public class FlightDataReceiverService {
                 .get()
                 .uri(url)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {});
+                .bodyToMono(new ParameterizedTypeReference<List<Flight>>() {
+                });
 
         return flightsMono.block();
     }

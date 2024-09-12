@@ -36,9 +36,9 @@ import reactor.core.publisher.Mono;
 @EnableScheduling
 public class SchedulingTasks {
     @Autowired
-	private FlightRepository flightRepository;
+    private FlightRepository flightRepository;
     @Autowired
-	private UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
     private LeaveDatePointerRepository pointerRepository;
     @Autowired
@@ -65,7 +65,7 @@ public class SchedulingTasks {
         // clear associations for each flight
         List<UserEntity> users = userRepository.findAll();
         for (UserEntity user : users) {
-            user.getFlights().removeAll(flights); 
+            user.getFlights().removeAll(flights);
         }
         userRepository.saveAll(users);
 
@@ -75,7 +75,7 @@ public class SchedulingTasks {
 
     public Flux<Flight> getAllFlights(int page, int size) {
         String url = String.format("http://localhost:8081/flight/paged?page=%d&size=%d", page, size);
-    
+
         return webClientBuilder.build()
                 .get()
                 .uri(url)
@@ -83,11 +83,10 @@ public class SchedulingTasks {
                 .bodyToMono(FlightPageEntity.class)
                 .flatMapMany(flightPage -> {
                     Flux<Flight> currentPageFlights = Flux.fromIterable(flightPage.getContent());
-                    
+
                     if (flightPage.getNumber() < flightPage.getTotalPages() - 1) {
                         return Flux.concat(currentPageFlights, getAllFlights(page + 1, size));
-                    } 
-                    else {
+                    } else {
                         return currentPageFlights;
                     }
                 });
@@ -96,85 +95,70 @@ public class SchedulingTasks {
     @Scheduled(cron = "0 0 3,6,9,12,15,18,21 * * ?")
     public synchronized void newPrices() {
         WebClient webClient = webClientBuilder.build();
-    
+
         Flux<Flight> flightFlux = getAllFlights(0, 50);
-    
-        flightFlux.groupBy(flight -> 
-            List.of(
-                flight.getLeaveDate(), 
-                flight.getReturnDay(), 
-                flight.getFlightStart(), 
-                flight.getFlightDestination()
-            )
-        )
-        .concatMap(groupedFlux -> 
-            groupedFlux.collectList() 
-                .flatMap(list -> 
-                    webClient.post()
-                        .uri("http://localhost:8082/data/update-price")
-                        .bodyValue(list) 
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) 
-                )
-        )
-        .concatMap(updateFlightQueries -> 
-            Flux.fromIterable(updateFlightQueries) 
-        )
-        .doOnNext(updateFlightQuery -> {
-            Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
-            Flight existingFlight = optionalFlight.get();
 
-            System.out.println("Updating flight: " + updateFlightQuery.getId());
+        flightFlux.groupBy(flight -> List.of(
+                flight.getLeaveDate(),
+                flight.getReturnDay(),
+                flight.getFlightStart(),
+                flight.getFlightDestination()))
+                .concatMap(groupedFlux -> groupedFlux.collectList()
+                        .flatMap(list -> webClient.post()
+                                .uri("http://localhost:8082/data/update-price")
+                                .bodyValue(list)
+                                .retrieve()
+                                .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {
+                                })))
+                .concatMap(updateFlightQueries -> Flux.fromIterable(updateFlightQueries))
+                .doOnNext(updateFlightQuery -> {
+                    Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
+                    Flight existingFlight = optionalFlight.get();
 
-            existingFlight.setPrice(updateFlightQuery.getPrice());
-            flightRepository.save(existingFlight);
-        })
-        .subscribe(); 
+                    System.out.println("Updating flight: " + updateFlightQuery.getId());
+
+                    existingFlight.setPrice(updateFlightQuery.getPrice());
+                    flightRepository.save(existingFlight);
+                })
+                .subscribe();
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
     public synchronized void newPricesAndLink() {
         WebClient webClient = webClientBuilder.build();
-    
+
         Flux<Flight> flightFlux = getAllFlights(0, 50);
-    
-        flightFlux.groupBy(flight -> 
-            List.of(
-                flight.getLeaveDate(), 
-                flight.getReturnDay(), 
-                flight.getFlightStart(), 
-                flight.getFlightDestination()
-            )
-        )
-        .concatMap(groupedFlux -> 
-            groupedFlux.collectList() 
-                .flatMap(list -> 
-                    webClient.post()
-                        .uri("http://localhost:8082/data/update-price-link")
-                        .bodyValue(list) 
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {}) 
-                )
-        )
-        .concatMap(updateFlightQueries -> 
-            Flux.fromIterable(updateFlightQueries) 
-        )
-        .doOnNext(updateFlightQuery -> {
-            Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
-            Flight existingFlight = optionalFlight.get();
 
-            System.out.println("Updating flight: " + updateFlightQuery.getId());
+        flightFlux.groupBy(flight -> List.of(
+                flight.getLeaveDate(),
+                flight.getReturnDay(),
+                flight.getFlightStart(),
+                flight.getFlightDestination()))
+                .concatMap(groupedFlux -> groupedFlux.collectList()
+                        .flatMap(list -> webClient.post()
+                                .uri("http://localhost:8082/data/update-price-link")
+                                .bodyValue(list)
+                                .retrieve()
+                                .bodyToMono(new ParameterizedTypeReference<List<UpdateFlightQuery>>() {
+                                })))
+                .concatMap(updateFlightQueries -> Flux.fromIterable(updateFlightQueries))
+                .doOnNext(updateFlightQuery -> {
+                    Optional<Flight> optionalFlight = flightRepository.findById(updateFlightQuery.getId());
+                    Flight existingFlight = optionalFlight.get();
 
-            existingFlight.setPrice(updateFlightQuery.getPrice());
-            existingFlight.setLink(updateFlightQuery.getLink());
-            flightRepository.save(existingFlight);
-        })
-        .subscribe(); 
+                    System.out.println("Updating flight: " + updateFlightQuery.getId());
+
+                    existingFlight.setPrice(updateFlightQuery.getPrice());
+                    existingFlight.setLink(updateFlightQuery.getLink());
+                    flightRepository.save(existingFlight);
+                })
+                .subscribe();
     }
 
     @Scheduled(cron = "59 59 23 ? * THU")
     public synchronized void weeklyNewFlights() {
-        LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID).orElse(new LeaveDatePointer(POINTER_ID, null));
+        LeaveDatePointer pointer = pointerRepository.findById(POINTER_ID)
+                .orElse(new LeaveDatePointer(POINTER_ID, null));
 
         List<Flight> latestFlights = flightRepository.findAllWithLatestLeaveDate();
 
@@ -205,7 +189,8 @@ public class SchedulingTasks {
         }
     }
 
-    public ResponseEntity<String> makeFlightQueries(LocalDate friday, LocalDate saturday, LocalDate sunday, LocalDate monday, String startPoint, String destination) {
+    public ResponseEntity<String> makeFlightQueries(LocalDate friday, LocalDate saturday, LocalDate sunday,
+            LocalDate monday, String startPoint, String destination) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, friday.toString(), sunday.toString());
@@ -214,13 +199,12 @@ public class SchedulingTasks {
         FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturday.toString(), monday.toString());
 
         try {
-                saveFlight(objectMapper.writeValueAsString(fridayToSunday));
-                saveFlight(objectMapper.writeValueAsString(fridayToMonday));
-                saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
-                saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
-            } 
-        catch (Exception e) {
-                return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
+            saveFlight(objectMapper.writeValueAsString(fridayToSunday));
+            saveFlight(objectMapper.writeValueAsString(fridayToMonday));
+            saveFlight(objectMapper.writeValueAsString(saturdayToSunday));
+            saveFlight(objectMapper.writeValueAsString(saturdayToMonday));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error saving flight data: " + e.getMessage());
         }
         return ResponseEntity.ok("Flight data initialized successfully");
     }
