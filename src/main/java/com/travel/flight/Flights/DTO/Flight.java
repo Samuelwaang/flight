@@ -28,9 +28,9 @@ import lombok.EqualsAndHashCode;
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Flight {
-  
+
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
     private long id;
     private String airline;
@@ -45,6 +45,8 @@ public class Flight {
     private String leaveDate;
     private String returnDay;
     private String flightImpactLink;
+    private String tripLength;
+    private boolean carryOnAllowed;
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "flightStops")
@@ -60,8 +62,6 @@ public class Flight {
     private List<Stop> returnStops;
     private int returnNumStops;
     private int returnTime;
-
-
 
     @ManyToMany(mappedBy = "flights", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -90,6 +90,8 @@ public class Flight {
                 ", arrivalTime='" + arrivalTime + '\'' +
                 ", leaveDate='" + leaveDate + '\'' +
                 ", returnDay='" + returnDay + '\'' +
+                ", tripLength='" + tripLength + '\'' +
+                ", carryOnAllowed='" + carryOnAllowed + '\'' +
                 ", numStops=" + numStops +
                 ", returnAirline='" + returnAirline + '\'' +
                 ", returnLeaveTime='" + returnLeaveTime + '\'' +
