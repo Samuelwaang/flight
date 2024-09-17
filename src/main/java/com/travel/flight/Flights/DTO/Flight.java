@@ -47,6 +47,7 @@ public class Flight {
     private String flightImpactLink;
     private String tripLength;
     private boolean carryOnAllowed;
+    private int totalStopDuration;
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "flightStops")

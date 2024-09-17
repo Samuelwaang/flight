@@ -47,13 +47,13 @@ public class FlightInitController {
         ObjectMapper objectMapper = new ObjectMapper();
         for (int i = 0; i < fridays.size(); i++) {
             FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, fridays.get(i).toString(),
-                    sundays.get(i).toString());
+                    sundays.get(i).toString(), "fridayToSunday");
             FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, fridays.get(i).toString(),
-                    mondays.get(i).toString());
+                    mondays.get(i).toString(), "fridayToMonday");
             FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(),
-                    sundays.get(i).toString());
+                    sundays.get(i).toString(), "saturdayToSunday");
             FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturdays.get(i).toString(),
-                    mondays.get(i).toString());
+                    mondays.get(i).toString(), "saturdayToMonday");
 
             try {
                 saveFlight(objectMapper.writeValueAsString(fridayToSunday));

@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class SearchQuery {
-    private Optional<String> flightStart = Optional.empty();
-    private Optional<String> flightDestination = Optional.empty();
+    private String flightStart;
+    private String flightDestination;
     private Optional<Double> minPrice = Optional.empty();
     private Optional<Double> maxPrice = Optional.empty();
     private Optional<Integer> maxTime = Optional.empty();

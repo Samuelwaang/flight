@@ -150,10 +150,14 @@ public class FlightUpdateService {
             LocalDate monday, String startPoint, String destination) {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, friday.toString(), sunday.toString());
-        FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, friday.toString(), monday.toString());
-        FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturday.toString(), sunday.toString());
-        FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturday.toString(), monday.toString());
+        FlightQuery fridayToSunday = new FlightQuery(startPoint, destination, friday.toString(), sunday.toString(),
+                "fridayToSunday");
+        FlightQuery fridayToMonday = new FlightQuery(startPoint, destination, friday.toString(), monday.toString(),
+                "fridayToMonday");
+        FlightQuery saturdayToSunday = new FlightQuery(startPoint, destination, saturday.toString(), sunday.toString(),
+                "saturdayToSunday");
+        FlightQuery saturdayToMonday = new FlightQuery(startPoint, destination, saturday.toString(), monday.toString(),
+                "saturdayToMonday");
 
         try {
             saveFlight(objectMapper.writeValueAsString(fridayToSunday));

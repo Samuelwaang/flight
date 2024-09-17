@@ -46,4 +46,7 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
                         @Param("flightStart") String flightStart,
                         @Param("flightDestination") String flightDestination, @Param("regexQuery") String regexQuery,
                         Pageable pageable);
+
+        @Query(value = ":query", nativeQuery = true)
+        List<Flight> findCheapestFlightsByQuery(@Param("query") String query);
 }

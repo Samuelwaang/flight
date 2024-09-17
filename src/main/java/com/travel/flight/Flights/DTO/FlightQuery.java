@@ -10,4 +10,5 @@ public class FlightQuery {
     private String destination;
     private String leaveDate;
     private String returnDate;
+    private String tripLength;
 }

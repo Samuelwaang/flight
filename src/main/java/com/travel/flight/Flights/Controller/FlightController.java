@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,7 @@ import com.travel.flight.Flights.FlightRepository;
 import com.travel.flight.Flights.FlightSaveService;
 import com.travel.flight.Flights.DTO.Flight;
 import com.travel.flight.Flights.DTO.PriceThresholdRequest;
+import com.travel.flight.Flights.DTO.SearchQuery;
 import com.travel.flight.Flights.DTO.Stop;
 import com.travel.flight.Security.JwtProvider;
 import com.travel.flight.Users.UserEntity;
@@ -310,6 +312,44 @@ public class FlightController {
 			@RequestParam(required = false) List<String> airlines) {
 		Pageable pageable = PageRequest.of(0, 50);
 		return flightRepository.findFlightsWithRegexp(flightStart, flightDestination, "UNITED", pageable);
+	}
+
+	@GetMapping("/search-filtered")
+	public ResponseEntity<List<Flight>> getFilteredFlights(@RequestBody SearchQuery request) {
+		String searchQuery = "SELECT * FROM flight WHERE flightStart = " + request.getFlightStart()
+				+ " AND flightDestination = " + request.getFlightDestination();
+		if (request.getAirlines().isPresent()) {
+			searchQuery += " AND airline REGEXP ";
+			List<String> airlines = request.getAirlines().get();
+			for (int i = 0; i < airlines.size(); i++) {
+				if (i == 0) {
+					searchQuery += airlines.get(i);
+				} else {
+					searchQuery += "|" + airlines.get(i);
+				}
+			}
+		}
+		if (request.getMinPrice().isPresent() && request.getMaxPrice().isPresent()) {
+			searchQuery += " AND price BETWEEN " + request.getMinPrice() + " and " + request.getMaxPrice();
+		}
+		if (request.getMaxTime().isPresent()) {
+			searchQuery += " AND time < " + request.getMaxTime();
+		}
+		if (request.getMaxStops().isPresent()) {
+			searchQuery += " AND numStops < " + request.getMaxStops();
+		}
+		if (request.getStopLength().isPresent()) {
+			searchQuery += " AND stopLength < " + request.getStopLength();
+		}
+		if (request.getTripLength().isPresent()) {
+			searchQuery += " AND time < " + request.getTripLength();
+		}
+		if (request.getCarryOnAllowed().isPresent()) {
+			searchQuery += " AND carryOnAllowed = TRUE";
+		}
+
+		searchQuery += " ORDER BY price ASC";
+		return ResponseEntity.ok(flightRepository.findCheapestFlightsByQuery(searchQuery));
 	}
 
 }
